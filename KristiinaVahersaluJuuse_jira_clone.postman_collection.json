@@ -3423,7 +3423,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"userIds\": [\n            {{user_id2}}\n        ]\n}",
+							"raw": "{\n   \"description\": \"lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum \"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -3455,7 +3455,7 @@
 									"",
 									"pm.test(\"Check issue id and title\", function () {",
 									"    pm.expect(jsonData.issue.id).to.equal(pm.globals.get(\"issue_id\"));",
-									"    pm.expect(jsonData.issue.description).to.equal(\"lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum \");",
+									"    pm.expect(jsonData.issue.description).to.equal(pm.globals.get(\"user_id3\"));",
 									"});"
 								],
 								"type": "text/javascript",
@@ -3478,7 +3478,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"description\": \"lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum lorem ipsum \"\n}",
+							"raw": "{\n    \"users\": [\n        {\n            \"id\": {{user_id3}}\n        }\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -4671,7 +4671,7 @@
 					"response": []
 				},
 				{
-					"name": "Change issue - invalid description (boolean)  - BUG (wrong error.data) Copy",
+					"name": "Change issue - invalid description (boolean)  - BUG (wrong error.data)",
 					"event": [
 						{
 							"listen": "test",
