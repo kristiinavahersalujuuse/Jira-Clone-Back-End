@@ -2469,7 +2469,7 @@
 								"exec": [
 									"//save received response to current test variable\r",
 									"var jsonData = pm.response.json();\r",
-									"var expectedTitle = pm.globals.get(\"{{word}}\");\r",
+									"var expectedTitle = pm.globals.get(\"word\");\r",
 									"\r",
 									"//retrieve globals variable\r",
 									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));\r",
@@ -2482,7 +2482,7 @@
 									"\r",
 									"pm.test(\"Check that the issue is found\", function () {\r",
 									"    pm.expect(jsonData.issues[0].id).to.equal(pm.globals.get(\"issue_id\"));\r",
-									"    pm.expect(jsonData.issues.title).to.equal(expectedTitle);\r",
+									"    pm.expect(jsonData.issues[0].title).to.equal(expectedTitle);\r",
 									"});"
 								],
 								"type": "text/javascript",
@@ -5089,7 +5089,7 @@
 									"    method: 'PUT',\r",
 									"    header: {\r",
 									"        'Content-Type': 'application/json',\r",
-									"        'Authorization': 'Bearer ' + pm.collectionVariables.get('token'),\r",
+									"        'Authorization': 'Bearer ' + pm.globals.get('token'),\r",
 									"    },\r",
 									"    body: {\r",
 									"            mode: 'raw',\r",
@@ -5100,9 +5100,20 @@
 									"});\r",
 									"\r",
 									"//postman.setNextRequest('9c63a6b4-cb20-4b38-a06e-791b3d8a22b6');\r",
-									"postman.setNextRequest('Create new issue (pre-request + headers)');"
+									"//postman.setNextRequest('Create new issue (pre-request + headers)');"
 								],
-								"type": "text/javascript"
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
 							}
 						}
 					],
@@ -5264,6 +5275,1401 @@
 							}
 						},
 						"url": "{{base_url}}/issues"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time tracking: estimate",
+			"item": [
+				{
+					"name": "Create issue (prerquisite)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//save received response to current test variable\r",
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedIssueType = pm.globals.get(\"type\");\r",
+									"var expectedIssueStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"pm.globals.set(\"title\", jsonData.issue.title);\r",
+									"pm.globals.set(\"type\", jsonData.issue.type);\r",
+									"pm.globals.set(\"updatedAt\", jsonData.issue.updatedAt);\r",
+									"\r",
+									"pm.test(\"Issue creation was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was saved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedIssueType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedIssueStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"\r",
+									"    pm.expect(jsonData.issue.createdAt).to.eql(jsonData.issue.updatedAt);\r",
+									"    \r",
+									"    let createdAtTimestamp = new Date(jsonData.issue.createdAt).getTime();\r",
+									"    let updatedAtTimestamp = new Date(jsonData.issue.updatedAt).getTime();\r",
+									"    let currentTime = new Date().getTime();\r",
+									"\r",
+									"    pm.expect(createdAtTimestamp).to.be.closeTo(currentTime, 2000);\r",
+									"    pm.expect(updatedAtTimestamp).to.be.closeTo(currentTime, 2000);\r",
+									"\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"    // example how to evaluate user from a list\r",
+									"    pm.expect(jsonData.issue.users[0].id).to.eql(104);\r",
+									"});\r",
+									"\r",
+									"    //Output to console\r",
+									"    // console.log(\"Test was passed\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// variables",
+									"const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"// setting globals",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);",
+									"",
+									"// array for issue type, complex",
+									"var issueType = [\"story\", \"task\", \"bug\"];",
+									"",
+									"for (var i = 0; i < issueType.length; i++) {",
+									"  pm.globals.set(\"type\" + (i + 1), issueType[i]);",
+									"}",
+									"",
+									"// for issue status, easy",
+									"const issueStatus = \"backlog\"",
+									"pm.globals.set(\"status\", issueStatus);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUsImlhdCI6MTY2MTg4ODg2NSwiZXhwIjoxNjc3NDQwODY1fQ.xBCXkyIvbEe6yW1l079gPqZjt0indGDLBvyUG9n_0es"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"{{type2}}\",\r\n    \"title\": \"{{word}}\",\r\n    \"description\": \"{{sentence}}\",\r\n    \"reporterId\": {{current_user_id}},\r\n    \"priority\": \"3\",\r\n    \"status\": \"{{status}}\",\r\n    \"projectId\": {{project_id}},\r\n    \"users\": [\r\n        {\r\n            \"id\": 104\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues"
+					},
+					"response": []
+				},
+				{
+					"name": "Get created issue (prerequisite)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/* const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);*/",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Add estimated time",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"var expectedRandomTimeEstimate = pm.globals.get(\"randomTimeEstimate\")",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check time spent\", function () {",
+									"     pm.expect(jsonData.issue.estimate).to.equal(expectedRandomTimeEstimate);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var randomInt = Math.floor(Math.random() * 100) + 1",
+									"",
+									"pm.globals.set(\"randomTimeEstimate\", randomInt);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"estimate\": {{randomTimeEstimate}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTimeSpent = pm.globals.get(\"randomTimeSpent\");\r",
+									"var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\");\r",
+									"\r",
+									"\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.eql(pm.globals.get(\"randomTimeEstimate\"));\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.equal(null);\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.equal(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove estimated time",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that information was retrieved correctly\", function () {",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"estimate\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response to be successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/* const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);*/",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Add max hours - time estimated",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that information was retrieved correctly\", function () {",
+									"    pm.expect(jsonData.issue.estimate).to.equal(1234456789);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"estimate\": 1234456789\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTimeSpent = pm.globals.get(\"randomTimeSpent\");\r",
+									"var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\");\r",
+									"\r",
+									"\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.estimate).to.equal(1234456789);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time tracking: time spent",
+			"item": [
+				{
+					"name": "Create issue (prerequisite)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//save received response to current test variable\r",
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedIssueType = pm.globals.get(\"type\");\r",
+									"var expectedIssueStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"pm.globals.set(\"title\", jsonData.issue.title);\r",
+									"pm.globals.set(\"type\", jsonData.issue.type);\r",
+									"pm.globals.set(\"updatedAt\", jsonData.issue.updatedAt);\r",
+									"\r",
+									"pm.test(\"Issue creation was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was saved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedIssueType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedIssueStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"\r",
+									"    pm.expect(jsonData.issue.createdAt).to.eql(jsonData.issue.updatedAt);\r",
+									"    \r",
+									"    let createdAtTimestamp = new Date(jsonData.issue.createdAt).getTime();\r",
+									"    let updatedAtTimestamp = new Date(jsonData.issue.updatedAt).getTime();\r",
+									"    let currentTime = new Date().getTime();\r",
+									"\r",
+									"    pm.expect(createdAtTimestamp).to.be.closeTo(currentTime, 2000);\r",
+									"    pm.expect(updatedAtTimestamp).to.be.closeTo(currentTime, 2000);\r",
+									"\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"    // example how to evaluate user from a list\r",
+									"    pm.expect(jsonData.issue.users[0].id).to.eql(104);\r",
+									"});\r",
+									"\r",
+									"    //Output to console\r",
+									"    // console.log(\"Test was passed\");\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// variables",
+									"const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"// setting globals",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);",
+									"",
+									"// array for issue type, complex",
+									"var issueType = [\"story\", \"task\", \"bug\"];",
+									"",
+									"for (var i = 0; i < issueType.length; i++) {",
+									"  pm.globals.set(\"type\" + (i + 1), issueType[i]);",
+									"}",
+									"",
+									"// for issue status, easy",
+									"const issueStatus = \"backlog\"",
+									"pm.globals.set(\"status\", issueStatus);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUsImlhdCI6MTY2MTg4ODg2NSwiZXhwIjoxNjc3NDQwODY1fQ.xBCXkyIvbEe6yW1l079gPqZjt0indGDLBvyUG9n_0es"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"{{type2}}\",\r\n    \"title\": \"{{word}}\",\r\n    \"description\": \"{{sentence}}\",\r\n    \"reporterId\": {{current_user_id}},\r\n    \"priority\": \"3\",\r\n    \"status\": \"{{status}}\",\r\n    \"projectId\": {{project_id}},\r\n    \"users\": [\r\n        {\r\n            \"id\": 104\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues"
+					},
+					"response": []
+				},
+				{
+					"name": "Get created issue (prerequisite)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/* const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);*/",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Log spent time",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"var expectedRandomTimeSpent = pm.globals.get(\"randomTimeSpent\")",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check time spent\", function () {",
+									"     pm.expect(jsonData.issue.timeSpent).to.equal(expectedRandomTimeSpent);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var randomInt = Math.floor(Math.random() * 100) + 1",
+									"",
+									"pm.globals.set(\"randomTimeSpent\", randomInt);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timeSpent\": {{randomTimeSpent}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Log spent time remaining",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"// var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\")",
+									"// var randomNumber = pm.globals.get(\"randomNumber\")",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check time remained\", function () {",
+									"     pm.expect(jsonData.issue.timeRemaining).to.equal(parseInt(pm.globals.get(\"randomNumber\")));",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/*var randomInt = Math.floor(Math.random() * 100) + 1",
+									"",
+									"pm.globals.set(\"randomTimeRemained\", randomInt);*/",
+									"",
+									"const randomInt = pm.variables.replaceIn(\"{{$randomInt}}\");",
+									"pm.globals.set(\"randomNumber\", randomInt);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"timeRemaining\": {{randomNumber}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTimeSpent = pm.globals.get(\"randomTimeSpent\");\r",
+									"// var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\");\r",
+									"\r",
+									"\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.equal(parseInt(pm.globals.get(\"randomNumber\")));\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.equal(expectedRandomTimeSpent);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove spent/remaining time",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that information was retrieved correctly\", function () {",
+									"    pm.expect(jsonData.issue.timeSpent).to.be.null;",
+									"    pm.expect(jsonData.issue.timeRemaining).to.be.null;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"timeSpent\": null,\n\"timeRemaining\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response to be successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/* const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);*/",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Add max loggable hours - time spent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that information was retrieved correctly\", function () {",
+									"    pm.expect(jsonData.issue.timeSpent).to.equal(1234456789);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"timeSpent\": 1234456789\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTimeSpent = pm.globals.get(\"randomTimeSpent\");\r",
+									"var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\");\r",
+									"\r",
+									"\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.equal(1234456789);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Time tracking: time spent Complex",
+			"item": [
+				{
+					"name": "Create issue and change issue (POST+PUT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"//save received response to current test variable\r",
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedIssueType = pm.globals.get(\"type\");\r",
+									"var expectedIssueStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTime = pm.globals.get(\"randomTimeSpent\");\r",
+									"var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\")\r",
+									"\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"pm.globals.set(\"title\", jsonData.issue.title);\r",
+									"pm.globals.set(\"type\", jsonData.issue.type);\r",
+									"\r",
+									"pm.test(\"Issue creation was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was saved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedIssueType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedIssueStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.createdAt).to.eql(jsonData.issue.updatedAt);\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									"\r",
+									"// Make changes to the issue\r",
+									"pm.sendRequest({\r",
+									"    url: pm.collectionVariables.get(\"base_url\") + '/issues/' + pm.globals.get(\"issue_id\"),\r",
+									"    method: 'PUT',\r",
+									"    header: {\r",
+									"        'Content-Type': 'application/json',\r",
+									"        'Authorization': 'Bearer ' + pm.globals.get(\"token\"),\r",
+									"    },\r",
+									"    body: {\r",
+									"            mode: 'raw',\r",
+									"            raw: JSON.stringify({\"timeSpent\": parseInt(expectedRandomTime), \"timeRemaining\":parseInt(expectedRandomTimeRemained)})\r",
+									"        }\r",
+									"}, function (error, response) {\r",
+									"       if(error) console.log(error);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// variables",
+									"const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"// setting globals",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);",
+									"",
+									"// array for issue type, complex",
+									"var issueType = [\"story\", \"task\", \"bug\"];",
+									"",
+									"for (var i = 0; i < issueType.length; i++) {",
+									"  pm.globals.set(\"type\" + (i + 1), issueType[i]);",
+									"}",
+									"",
+									"// for issue status, easy",
+									"const issueStatus = \"backlog\"",
+									"pm.globals.set(\"status\", issueStatus);",
+									"",
+									"// time tracking",
+									"var randomInt = Math.floor(Math.random() * 20) + 1",
+									"pm.globals.set(\"randomTimeSpent\", randomInt);",
+									"",
+									"var randomInt = Math.floor(Math.random() * 15) + 1",
+									"pm.globals.set(\"randomTimeRemained\", randomInt);",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjUsImlhdCI6MTY2MTg4ODg2NSwiZXhwIjoxNjc3NDQwODY1fQ.xBCXkyIvbEe6yW1l079gPqZjt0indGDLBvyUG9n_0es"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"type\": \"{{type2}}\",\r\n    \"title\": \"{{word}}\",\r\n    \"description\": \"{{sentence}}\",\r\n    \"reporterId\": {{current_user_id}},\r\n    \"priority\": \"3\",\r\n    \"status\": \"{{status}}\",\r\n    \"projectId\": {{project_id}}\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues"
+					},
+					"response": []
+				},
+				{
+					"name": "Get issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"var expectedRandomTime = pm.globals.get(\"randomTimeSpent\");\r",
+									"var expectedRandomTimeRemained = pm.globals.get(\"randomTimeRemained\")\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response was successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(expectedRandomTime);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(expectedRandomTimeRemained);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Remove spent/remaining time",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"console.log(\"We are checking issue \" + pm.globals.get(\"issue_id\"));",
+									"",
+									"pm.test(\"Issue update was successful\", function () {",
+									"    pm.response.to.not.be.error;",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that information was retrieved correctly\", function () {",
+									"    pm.expect(jsonData.issue.timeSpent).to.be.null;",
+									"    pm.expect(jsonData.issue.timeRemaining).to.be.null;",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"timeSpent\": null,\n\"timeRemaining\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{base_url}}/issues/{{issue_id}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Get updated issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();\r",
+									"var expectedWord = pm.globals.get(\"word\");\r",
+									"var expectedSentence = pm.globals.get(\"sentence\");\r",
+									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedStatus = pm.globals.get(\"status\");\r",
+									"\r",
+									"\r",
+									"//save certain value from JSON to globals  variable\r",
+									"pm.globals.set(\"issue_id\", jsonData.issue.id);\r",
+									"\r",
+									"\r",
+									"pm.test(\"Verify response to be successful\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check that information was retrieved correctly\", function () {\r",
+									"    pm.expect(jsonData.issue.title).to.equal(expectedWord);\r",
+									"    pm.expect(jsonData.issue.description).to.eql(expectedSentence);\r",
+									"    pm.expect(jsonData.issue.type).to.eql(expectedType);\r",
+									"    pm.expect(jsonData.issue.status).to.eql(expectedStatus);\r",
+									"    pm.expect(jsonData.issue.priority).to.eql(\"3\");\r",
+									"    pm.expect(jsonData.issue.reporterId).to.equal(pm.globals.get(\"current_user_id\"));\r",
+									"    pm.expect(jsonData.issue.projectId).to.equal(pm.globals.get(\"project_id\"));\r",
+									"    pm.expect(jsonData.issue.estimate).to.be.null;\r",
+									"    pm.expect(jsonData.issue.timeSpent).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.timeRemaining).to.eql(null);\r",
+									"    pm.expect(jsonData.issue.createdAt).to.not.be.null;\r",
+									"    pm.expect(jsonData.issue.updatedAt).to.not.be.empty;\r",
+									"    pm.expect(jsonData.issue.listPosition).to.not.be.null;\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"/* const randomSentence = pm.variables.replaceIn(\"{{$randomLoremSentence}}\");",
+									"const randomWord = pm.variables.replaceIn(\"{{$randomAdjective}}\");",
+									"",
+									"pm.globals.set(\"sentence\", randomSentence);",
+									"pm.globals.set(\"word\", randomWord);*/",
+									"",
+									"",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/issues/{{issue_id}}"
 					},
 					"response": []
 				}
