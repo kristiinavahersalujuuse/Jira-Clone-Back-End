@@ -218,7 +218,7 @@
 									"var jsonData = pm.response.json();\r",
 									"var expectedWord = pm.globals.get(\"word\");\r",
 									"var expectedSentence = pm.globals.get(\"sentence\");\r",
-									"var expectedType = pm.globals.get(\"type2\");\r",
+									"var expectedType = pm.globals.get(\"type\");\r",
 									"var expectedStatus = pm.globals.get(\"status\");\r",
 									"\r",
 									"pm.test(\"Verify response was successful\", function () {\r",
