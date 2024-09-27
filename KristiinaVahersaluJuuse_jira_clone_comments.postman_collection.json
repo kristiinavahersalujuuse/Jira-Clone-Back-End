@@ -523,7 +523,7 @@
 									"    pm.response.to.have.status(400);",
 									"    pm.expect(jsonData.error.code).to.eql(\"BAD_USER_INPUT\");",
 									"    pm.expect(jsonData.error.message).to.eql(\"There were validation errors.\");",
-									"    pm.expect(jsonData.error.data.fields.body).to.eql(\"This field is required\");",
+									"    pm.expect(jsonData.error.data.fields.issueId).to.eql(\"This field is required\");",
 									"});"
 								],
 								"type": "text/javascript",
@@ -576,7 +576,7 @@
 									"    pm.response.to.have.status(400);",
 									"    pm.expect(jsonData.error.code).to.eql(\"BAD_USER_INPUT\");",
 									"    pm.expect(jsonData.error.message).to.eql(\"There were validation errors.\");",
-									"    pm.expect(jsonData.error.data.fields.body).to.eql(\"This field is required\");",
+									"    pm.expect(jsonData.error.data.fields.userId).to.eql(\"This field is required\");",
 									"});"
 								],
 								"type": "text/javascript",
@@ -1694,7 +1694,7 @@
 					"response": []
 				},
 				{
-					"name": "Update comment - valid data Copy",
+					"name": "Update comment - valid data",
 					"event": [
 						{
 							"listen": "prerequest",
